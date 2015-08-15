@@ -99,17 +99,20 @@ struct mosquitto_message_all{
 	struct mosquitto_message msg;
 };
 
+/*
+ * struct mosquito主要用于保存一个客户端连接的所有信息
+ */
 struct mosquitto {
-	int sock;
-	char *address;
-	char *id;//客户端的id
+	int sock;//mosquitto服务器程序与该客户端连接通信所用的socket描述符
+	char *address;//IP地址
+	char *id;//客户端登陆mosquitto程序时所提供的ID值，该值与其他的客户端不能重复
 	char *username;
 	char *password;
-	uint16_t keepalive;//客户端发送过来的keepalive时间
+	uint16_t keepalive;//客户端发送过来的keepalive时间，该客户端需在此时间内向mosquitto服务器程序发送一条ping/pong消息
 	bool clean_session;
 	enum mosquitto_client_state state;
-	time_t last_msg_in;
-	time_t last_msg_out;
+	time_t last_msg_in;//记录上次收消息的时间
+	time_t last_msg_out;//记录上次发消息的时间
 	time_t ping_t;
 	uint16_t last_mid;//这个连接的上一个msgid
 	struct _mosquitto_packet in_packet;//客户端发送过来的最后一个包

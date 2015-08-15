@@ -62,6 +62,10 @@ struct _mqtt3_listener {
 	int client_count;//这个listener上面的客户连接数目
 };
 
+/*
+ * 结构体struct mqtt3_config用于保存mosquitto的所有配置信息，
+ * mosquitto程序在启动时将初始化该结构体并从配置文件中读取配置信息保存于该结构体变量内。
+ */
 struct mqtt3_config {
 	char *config_file;
 	char *acl_file;
@@ -100,6 +104,10 @@ struct mqtt3_config {
 	int auth_option_count;
 };
 
+/*
+ * 在mosquitto程序中，对某一topic的所有订阅者被组织成一个订阅列表，
+ * 该订阅列表是一个双向链表，链表的每个节点都保存有一个订阅者
+ */
 struct _mosquitto_subleaf {
 	struct _mosquitto_subleaf *prev;
 	struct _mosquitto_subleaf *next;
@@ -107,9 +115,13 @@ struct _mosquitto_subleaf {
 	int qos;
 };
 
+/*
+ * 是用于保存订阅树的节点（包括叶子节点和中间节点），mosquitto中对订阅树采用孩子-兄弟链表法的方式进行存储，
+ * 该存储方式主要借助与数据结构struct _mosquitto_subhier来完成
+ */
 struct _mosquitto_subhier {
-	struct _mosquitto_subhier *children;//这个节点的下一级节点链表
-	struct _mosquitto_subhier *next;
+	struct _mosquitto_subhier *children;//这个节点的下一级节点链表,即该成员指针指向同结构的第一个孩子节点
+	struct _mosquitto_subhier *next;//该成员指针指向该节点的下一个兄弟节点
 	struct _mosquitto_subleaf *subs;//一个节点上订阅的客户端链表
 	char *topic;
 	struct mosquitto_msg_store *retained;//指向db->msg_store上的一条消息，在指向的时候增加了count计数的，所以不会丢掉
@@ -183,14 +195,18 @@ struct _mosquitto_auth_list{
 	struct _mosquitto_auth_list * next ;
 };
 
+/*
+ * mosquitto对所有内部数据的统一管理结构，可以认为是其内部的一个内存数据库。
+ * 它保存了所有的客户端，所有客户端的订阅关系等
+ */
 struct mosquitto_db{
 	dbid_t last_db_id;//msg_store上的消息的顺序id
 	struct _mosquitto_subhier subs;//树形的订阅关系列表.该链表第一个节点为正常的topic订阅节点，第二个为$SYS系统状态订阅节点
 	struct _mosquitto_unpwd *unpwd;
 	struct _mosquitto_acl_user *acl_list;
 	struct _mosquitto_acl *acl_patterns;
-	struct mosquitto **contexts;//注意这个地方会不断变化，所以不要指向这个数组
-	int context_count;//contexts数组的总长度，不是实际长度
+	struct mosquitto **contexts;//注意这个地方会不断变化，所以不要指向这个数组, 可理解为一个用于存放所有客户端变量（类型为struct mosquitto）地址的数组，mosquitto程序中，所有的客户端都在此数组中保存
+	int context_count;//contexts数组的总长度，不是实际长度, 该值也是当前mosquitto程序中维持的所有客户端的数目
 	struct _clientid_index_hash *clientid_index_hash;//所有客户端id的哈希表,用来快速找到这个客户端在db->contexts数组中的位置的
 	struct mosquitto_msg_store *msg_store;//这里是所有publish的消息，都在这.新消息插入头部
 	int msg_store_count;
